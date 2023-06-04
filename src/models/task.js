@@ -22,6 +22,11 @@ const TaskSchema = new mongoose.Schema(
         default: false,
         required:true
       },
+       isPublic: {
+        type: Boolean,
+        default: false,
+        required: true,
+      },
       owner: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,

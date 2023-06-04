@@ -6,15 +6,14 @@ const authMiddleware = async (req, res, next) => {
   try {
     // Extract the token from the request headers
     const token = req.header('Authorization').replace('Bearer ', '');
-console.log("token"+token)
+
     // Verify the token
    
     const decoded = jwt.verify(token, 'my_secret_key');
     
     // Find the user associated with the token
     const user = await User.findOne({ _id: decoded._id, 'tokens.token': token });
-    console.log(user )
-    // Check if the user exists
+   // Check if the user exists
     if (!user) {
       throw new Error();
     }

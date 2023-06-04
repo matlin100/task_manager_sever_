@@ -8,7 +8,8 @@ const dbName = 'task-manager';
     await mongoose.connect(mongodbURL + dbName, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      bufferCommands: false,
+      //useCreateIndex: true,
+      //useFindAndModify: false,
       writeConcern: {
         w: 'majority'
       }

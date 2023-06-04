@@ -1,16 +1,16 @@
 const express = require('express');
 const stringSimilarity = require('string-similarity');
-const User = require('../models/user');
+const auth = require('../middleware/auth')
+const User = require('../models/user')
+
 
 const router = express.Router();
 
 router.post('', async (req, res) => {
     try{
     const user = new User(req.body);
-    const workt = await user.save()
-    if(!workt)
-        escape.send(workt)
-    res.send(workt);
+    await user.generateAuthToken()
+    res.send(user);
     }
     catch(error){
         res.status(400).send(error);
@@ -21,91 +21,60 @@ router.post('', async (req, res) => {
     const { email, password } = req.body;
   
     try {
-      const user = await User.findByCredentials(email, password);
-      // User credentials are valid, proceed with authentication
-  
-      // Send response or generate authentication token
-      res.send({ user });
+      const {user} = await User.findByCredentials(email, password);
+      res.send(user);
     } catch (error) {
       // User credentials are invalid
       res.status(401).send('Invalid credentials');
     }
   });
-  
 
-  router.get('', async (req, res) => {
+
+  router.post('/logout', auth, async (req, res) => {
     try {
-      const users = await User.find({});
-      const numOfUsers = await User.countDocuments({});
-      res.send({ users, count: numOfUsers });
+      // Remove the token from the user's token array
+      req.user.tokens = req.user.tokens.filter((token) => token.token !== req.token);
+      // Save the updated user document
+      await req.user.save();
+      res.send('Logout successful');
     } catch (error) {
-      res.status(500).send('Error fetching users');
+      res.status(500).send(error);
     }
   });
+
+  // Logout route
+router.post('/logoutAll', auth, async (req, res) => {
+  try {
+    // Remove all tokens from the user's token array
+    req.user.tokens = [];
+    // Save the updated user document
+    await req.user.save();
+    res.send('Logout from all devices successful');
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
   
-  router.get('/:id', async (req, res) => {
-    const userId = req.params.id;
+  router.get('/me', auth, async (req, res) => {
     try{
-        const user = await User.findById(userId);
-        if (!user) {
-          throw new Error('User not found');
-        }
-        res.send(user);
+        res.send(req.user);
     }catch(error){
         res.status(500).send('Error fetching user');
     };
   });
 
-  router.patch('/:id', async (req, res) => {
-    const updates = Object.keys(req.body);
-    const allowedUpdates = ['name', 'email', 'password', 'age'];
-    const correctedUpdates = updates.map((update) => {
-      const similarity = stringSimilarity.findBestMatch(update, allowedUpdates).bestMatch;
-      if (similarity.rating < 0.8) {
-        return update; // If similarity rating is below a threshold, don't correct the word
-      }
-      return similarity.target; // Use the closest match as the corrected word
-    });
-    const invalidUpdates = correctedUpdates.filter((update) => !allowedUpdates.includes(update));
-  
-    if (invalidUpdates.length > 0) {
-      return res.status(400).send(`Invalid update: ${invalidUpdates.join(', ')}`);
-    }
-  
+
+  router.delete('/me', auth, async (req, res) => {
     try {
-      const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-      if (!user) {
+      const deletedUser = await User.findByIdAndRemove(req.user._id);
+      if (!deletedUser) {
         return res.status(404).send('User not found');
       }
-      res.send(user);
+      res.send(deletedUser);
     } catch (error) {
       res.status(500).send(error);
     }
   });
-    
-  router.delete('', async (req, res) => {
-    const { email, password } = req.body;
-
-    try {
-        const user = await User.findByCredentials(email, password);
-        const deleted = await User.deleteMany()
-        res.send(deleted)
-      } catch (error) {
-        // User credentials are invalid
-        res.status(401).send('Invalid credentials');
-      }
-})
-
-router.delete('/:id', async (req, res) => {
-    try{
-    const teleted = await User.findByIdAndRemove(req.params.id)
-    if(!teleted){
-        res.status(404).send('not find user tu delet')
-    }
-    req.send(teleted)
-}catch(error){
-    res.send(error)
-}
-})
-
+  
 module.exports = router;

@@ -1,6 +1,7 @@
 const express = require('express');
 const stringSimilarity = require('string-similarity');
 const auth = require('../middleware/auth')
+const multer = require('multer');
 const User = require('../models/user')
 const Task = require('../models/task')
 
@@ -86,4 +87,75 @@ router.post('/logoutAll', auth, async (req, res) => {
     }
   });
   
-module.exports = router;
+
+  const upload = multer({
+    // dest: 'uploads/', // Remove the dest option to store the file in memory
+    limits: {
+      fileSize: 1000000 // 1MB file size limit
+    },
+    fileFilter(req, file, cb) {
+      if (!file.originalname.match(/\.(jpg|jpeg|png)$/i)) {
+        // Invalid file extension
+        return cb(new Error('Invalid file format. Only JPG, JPEG, and PNG files are allowed.'));
+      }
+      cb(undefined, true);
+    }
+  });
+  
+  // Update avatar route
+  router.post('/me/avatar', auth, upload.single('avatar'), async (req, res, next) => {
+    if (!req.file) {
+      return res.status(400).send('No file uploaded');
+    }
+  
+    try {
+      // Save the file information to the user model
+      req.user.avatar = req.file.buffer; 
+      await req.user.save();
+  
+      res.send('File uploaded');
+    } catch (error) {
+      // Handle any other errors that occur
+      next(error);
+    }
+  });
+  
+  // Delete avatar route
+  router.delete('/me/avatar', auth, async (req, res, next) => {
+    try {
+      if (!req.user.avatar) {
+        return res.status(404).send('Avatar not found');
+      }
+  
+      // Remove the avatar from the user model
+      req.user.avatar = undefined;
+      await req.user.save();
+  
+      res.send('Avatar deleted');
+    } catch (error) {
+      // Handle any other errors that occur
+      next(error);
+    }
+  });
+  
+  // Serve avatar image route
+  router.get('/me/avatar', auth, async (req, res, next) => {
+    try {
+      if (!req.user.avatar) {
+        return res.status(404).send('Avatar not found');
+      }
+  
+      // Set the response content type to the appropriate image format
+      res.set('Content-Type', 'image/png'); // Assuming the avatar is stored as a PNG image
+  
+      // Send the avatar image
+      res.send(req.user.avatar);
+    } catch (error) {
+      // Handle any other errors that occur
+      next(error);
+    }
+  });
+  
+
+
+  module.exports = router;

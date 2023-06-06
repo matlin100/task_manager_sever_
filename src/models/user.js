@@ -36,7 +36,7 @@ const UserSchema = new mongoose.Schema({
     }
   },
   avatar: {
-    type: String // Store the URL or reference to the image file
+    type: Buffer // Store the URL or reference to the image file
   },
   tokens: [{
     token: {

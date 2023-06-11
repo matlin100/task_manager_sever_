@@ -12,6 +12,7 @@ const { use } = require('bcrypt/promises');
 const router = express.Router();
 
 router.post('', async (req, res) => {
+  res.send('app test conacted');
     try{
     const user = new User(req.body);
     await user.generateAuthToken()

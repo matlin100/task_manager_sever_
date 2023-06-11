@@ -1,9 +1,13 @@
 const express = require('express');
-const stringSimilarity = require('string-similarity');
+//const stringSimilarity = require('string-similarity');
 const auth = require('../middleware/auth')
 const multer = require('multer');
+const sharp = require('sharp');
+const { sendEmail } = require('../emails/emailService'); 
+
 const User = require('../models/user')
-const Task = require('../models/task')
+const Task = require('../models/task');
+const { use } = require('bcrypt/promises');
 
 const router = express.Router();
 
@@ -11,7 +15,10 @@ router.post('', async (req, res) => {
     try{
     const user = new User(req.body);
     await user.generateAuthToken()
-    res.send(user.tokens);
+
+    const text = `${user.name}\nThank you for signing up! We are excited to have you on board.`
+    sendEmail(user.email,` Welcome to Our Application`,text )
+    res.send(user);
     }
     catch(error){
         res.status(400).send(error);
@@ -66,32 +73,34 @@ router.post('/logoutAll', auth, async (req, res) => {
   });
 
 
-  router.delete('/me', auth, async (req, res) => {
-    console.log('in delet')
-    try {
-      const userId = req.user._id;
-   
-      // Delete all tasks associated with the user
-      await Task.deleteMany({ owner: userId });
-      
-      // Delete the user
-      const deletedUser = await User.findByIdAndRemove(userId);
   
-      if (!deletedUser) {
-        return res.status(404).send('User not found');
-      }
-      console.log(deletedUser)
-      res.send(deletedUser);
-    } catch (error) {
-      res.status(500).send(error);
+router.delete('/me', auth, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    
+    await Task.deleteMany({owner:req.user._id})
+    // Delete the user
+    const deletedUser = await User.findByIdAndRemove(userId);
+    
+    if (!deletedUser) {
+      return res.status(404).send('User not found');
     }
-  });
+  
+    // Send email to user
+    const text = `${req.user.name}\nWe are sorry to see you go.\nCould you please provide feedback on why you deleted your account?`;
+    sendEmail(req.user.email,'Account Deletion',text)
+
+    res.send('User deleted');
+  } catch (error) {
+    res.status(500).send('Error');
+  }
+});
   
 
   const upload = multer({
     // dest: 'uploads/', // Remove the dest option to store the file in memory
     limits: {
-      fileSize: 1000000 // 1MB file size limit
+      fileSize: 100000000 // 1MB file size limit
     },
     fileFilter(req, file, cb) {
       if (!file.originalname.match(/\.(jpg|jpeg|png)$/i)) {
@@ -107,10 +116,10 @@ router.post('/logoutAll', auth, async (req, res) => {
     if (!req.file) {
       return res.status(400).send('No file uploaded');
     }
-  
+    const buffer =await sharp(req.file.buffer).png().resize({ width:250, height:250 }).toBuffer()
     try {
       // Save the file information to the user model
-      req.user.avatar = req.file.buffer; 
+      req.user.avatar = buffer 
       await req.user.save();
   
       res.send('File uploaded');
@@ -126,7 +135,6 @@ router.post('/logoutAll', auth, async (req, res) => {
       if (!req.user.avatar) {
         return res.status(404).send('Avatar not found');
       }
-  
       // Remove the avatar from the user model
       req.user.avatar = undefined;
       await req.user.save();
@@ -156,6 +164,21 @@ router.post('/logoutAll', auth, async (req, res) => {
     }
   });
   
-
+  router.put('/me/avatar', auth, upload.single('avatar'), async (req, res, next) => {
+    if (!req.file) {
+      return res.status(400).send('No file uploaded');
+    }
+    const buffer = await sharp(req.file.buffer).png().resize({ width: 250, height: 250 }).toBuffer();
+    try {
+      // Save the file information to the user model
+      req.user.avatar = buffer;
+      await req.user.save();
+  
+      res.send('Avatar updated');
+    } catch (error) {
+      // Handle any other errors that occur
+      next(error);
+    }
+  });
 
   module.exports = router;

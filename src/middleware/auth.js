@@ -9,7 +9,7 @@ const authMiddleware = async (req, res, next) => {
 
     // Verify the token
    
-    const decoded = jwt.verify(token, 'my_secret_key');
+    const decoded = jwt.verify(token, process.env.JWT_TOKEN_SECRET);
     
     // Find the user associated with the token
     const user = await User.findOne({ _id: decoded._id, 'tokens.token': token });

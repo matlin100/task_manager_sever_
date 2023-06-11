@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const mongodbURL = 'mongodb://127.0.0.1:27017/';
+const mongodbURL = process.env.MONGODB_URL;
 const dbName = 'task-manager';
 
 (async () => {

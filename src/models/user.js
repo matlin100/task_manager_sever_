@@ -57,7 +57,8 @@ UserSchema.virtual('tasks', {
 UserSchema.methods.toJSON = function() {
   const user = this.toObject();
   delete user.password;
-  delete user.tokens;
+  //delete user.tokens;
+  delete user.avatar;
   return user;
 };
 
@@ -78,7 +79,7 @@ UserSchema.pre('save', async function (next) {
 
 UserSchema.methods.generateAuthToken = async function () {
   const user = this;
-  const token = jwt.sign({ _id: user._id.toString() }, 'my_secret_key');
+  const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_TOKEN_SECRET);
   user.tokens.push({ token });
   await user.save();
   return token;

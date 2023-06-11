@@ -5,7 +5,7 @@ const dbName = 'task-manager';
 
 (async () => {
   try {
-    await mongoose.connect(mongodbURL + dbName, {
+    await mongoose.connect(`${mongodbURL}/${dbName}`, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       //useCreateIndex: true,

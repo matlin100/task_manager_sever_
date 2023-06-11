@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const mongodbURL = 'mongodb://tasks-app:zxpuZFXrQiWlsFhc3TcoDy87M6h3SLUI5da9cPH2DOFQwO1hUkdiAhRIkn6VmQeN7rO7Xt7UZSzVACDbpHcm4A==@tasks-app.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@tasks-app@/';
+const mongodbURL = process.env.MONGODB_URL;
 const dbName = 'task-manager';
 
 (async () => {
@@ -11,8 +11,8 @@ const dbName = 'task-manager';
       //useCreateIndex: true,
       //useFindAndModify: false,
       auth: {
-        username: 'tasks-app',
-        password: 'zxpuZFXrQiWlsFhc3TcoDy87M6h3SLUI5da9cPH2DOFQwO1hUkdiAhRIkn6VmQeN7rO7Xt7UZSzVACDbpHcm4A=='
+        username: process.env.DB_USER_NAME,
+        password:process.env.DB_PASSOWRD
       }
     });
     console.log("Connected to MongoDB");

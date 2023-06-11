@@ -10,6 +10,10 @@ const dbName = 'task-manager';
       useUnifiedTopology: true,
       //useCreateIndex: true,
       //useFindAndModify: false,
+      auth: {
+        user: process.env.DB_USER_NAME,
+        password: process.env.DB_PASSOWRD
+      },
       writeConcern: {
         w: 'majority'
       }

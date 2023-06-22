@@ -5,7 +5,7 @@ const User = require('../models/user');
 const authMiddleware = async (req, res, next) => {
   try {
     // Extract the token from the request headers
-    const token = req.header('Authorization').replace('Bearer ', '');
+    const token = req.header('Authorization').replace('Bearer ', '') || req.cookies.authToken;
 
     // Verify the token
    

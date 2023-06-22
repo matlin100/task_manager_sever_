@@ -12,13 +12,15 @@ const { use } = require('bcrypt/promises');
 const router = express.Router();
 
 router.post('', async (req, res) => {
- 
+
     try{
     const user = new User(req.body);
     await user.generateAuthToken()
 
     const text = `${user.name}\nThank you for signing up! We are excited to have you on board.`
     sendEmail(user.email,` Welcome to Our Application`,text )
+    
+    res.cookie('authToken', token); 
     res.send(user);
     }
     catch(error){
@@ -31,6 +33,7 @@ router.post('', async (req, res) => {
   
     try {
       const {user} = await User.findByCredentials(email, password);
+      res.cookie('authToken', token); 
       res.send(user);
     } catch (error) {
       // User credentials are invalid

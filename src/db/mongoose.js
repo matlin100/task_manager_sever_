@@ -8,15 +8,14 @@ const dbName = 'task-manager';
     await mongoose.connect(`${mongodbURL}/${dbName}`, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      //useCreateIndex: true,
-      //useFindAndModify: false,
+      // useCreateIndex: true,
+      // useFindAndModify: false,
       auth: {
         username: process.env.DB_USER_NAME,
-        password:process.env.DB_PASSOWRD
+        password: process.env.DB_PASSOWRD
       }
     });
     console.log("Connected to MongoDB");
-   
   } catch (err) {
     console.log(err);
   }

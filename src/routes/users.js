@@ -18,9 +18,9 @@ router.post('', async (req, res) => {
     await user.generateAuthToken()
 
     const text = `${user.name}\nThank you for signing up! We are excited to have you on board.`
-    sendEmail(user.email,` Welcome to Our Application`,text )
+     sendEmail(user.email,` Welcome to Our Application`,text )
     
-    res.cookie('authToken', token); 
+     res.cçookie('authToken', token); 
     res.send(user);
     }
     catch(error){
